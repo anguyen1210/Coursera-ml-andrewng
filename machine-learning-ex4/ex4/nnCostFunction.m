@@ -62,21 +62,63 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+%forward propogation
+X = [ones(m, 1), X]; % add ones m*(n+1)
 
+a1 = X;
+z2 = Theta1 * X' ; 
 
+a2 = sigmoid(z2);
+a2 = [ones(m, 1), a2']; 
 
+z3 = Theta2 * a2'; 
+a3 = sigmoid(z3);
+ 
+h_theta = a3; % m*k
+Y = zeros(num_labels, m); 
+ 
+for i = 1:m
+Y(y(i), i) = 1;
+end
+ 
+part1 = Y .* log(h_theta);
+part2 = (1-Y) .* log((1-h_theta));
+J_unreg = (1/m) * sum(sum(-part1 - part2));
+ 
+% regularized cost function
+Theta1_reg = sum(sum(Theta1(:, 2:end).^2));
+Theta2_reg = sum(sum(Theta2(:, 2:end).^2));
+ 
+J = J_unreg + (lambda/(2*m))*(Theta1_reg + Theta2_reg);
+ 
+%back propogation
+for t = 1:m
+a1 = X(t, :);
+z2 = Theta1 * a1';
+a2 = sigmoid(z2);
+a2 = [1; a2];
+z3 = Theta2 * a2;
+a3 = sigmoid(z3);
+ 
+z2 = [1;  z2];
+ 
+delta3 = a3 - Y(:, t);
+delta2 = (Theta2' * delta3) .* sigmoidGradient(z2);
+delta2 = delta2(2:end);
+ 
+Theta2_grad = Theta2_grad + delta3 * a2';
+Theta1_grad = Theta1_grad + delta2 * a1;
+end
 
-
-
-
-
-
-
-
-
-
-
-
+Theta2_grad = Theta2_grad / m;
+Theta1_grad = Theta1_grad / m;
+ 
+% Regularized 
+reg_theta1 = Theta1(:, 2:end) * lambda/m;
+reg_theta2 = Theta2(:, 2:end) * lambda/m;
+  
+Theta1_grad(:, 2:end) = Theta1_grad(:, 2:end) + reg_theta1;
+Theta2_grad(:, 2:end) = Theta2_grad(:, 2:end) + reg_theta2;
 
 
 
